@@ -30,11 +30,11 @@ function StatCard({ label, value, change, changeDirection, icon: Icon }: {
 export default function DashboardPage() {
   const { leads, activities, tasks } = useCRM();
 
-  const totalLeads = leads.length;
-  const converted = leads.filter(l => l.status === 'Converted').length;
+  const totalLeads = leads?.length || 0;
+  const converted = leads?.filter(l => l.status === 'Converted').length || 0;
   const convRate = totalLeads > 0 ? ((converted / totalLeads) * 100).toFixed(1) : '0';
-  const totalRevenue = leads.reduce((s, l) => s + l.estimatedValue, 0);
-  const recentLeads = leads.slice(0, 5);
+  const totalRevenue = leads?.reduce((s, l) => s + (l.estimatedValue || 0), 0) || 0;
+  const recentLeads = leads?.slice(0, 5) || [];
 
   return (
     <div className="space-y-6">
@@ -126,17 +126,21 @@ export default function DashboardPage() {
             <h3 className="font-semibold text-foreground">Recent Activity</h3>
           </div>
           <div className="space-y-4">
-            {activities.slice(0, 6).map((activity) => (
+            {activities.length > 0 ? activities.slice(0, 6).map((activity) => (
               <div key={activity.id} className="flex items-start gap-3">
                 <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
                   activity.type === 'email' ? 'bg-primary' : activity.type === 'call' ? 'bg-warning' : activity.type === 'status_change' ? 'bg-success' : 'bg-info'
                 }`} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-foreground">{activity.description}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{activity.user} • {activity.timestamp}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {typeof activity.user === 'string' ? activity.user : (activity.user as any)?.name || 'System'} • {new Date(activity.timestamp).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
-            ))}
+            )) : (
+              <p className="text-sm text-muted-foreground py-8 text-center">No recent activities</p>
+            )}
           </div>
         </div>
       </div>
@@ -147,8 +151,14 @@ export default function DashboardPage() {
           <span className="text-sm font-semibold text-foreground">✨ AI Lead Scoring Insight</span>
         </div>
         <p className="text-sm text-muted-foreground">
-          Based on engagement patterns, <strong className="text-foreground">{leads.filter(l => l.leadScore > 80).length} leads</strong> have a high probability of conversion (score &gt; 80%). 
-          Top prospect: <strong className="text-foreground">{leads.sort((a, b) => b.leadScore - a.leadScore)[0]?.fullName}</strong> with a {leads.sort((a, b) => b.leadScore - a.leadScore)[0]?.leadScore}% score.
+          {leads.length > 0 ? (
+            <>
+              Based on engagement patterns, <strong className="text-foreground">{leads.filter(l => (l.leadScore || 0) > 80).length} leads</strong> have a high probability of conversion (score &gt; 80%). 
+              Top prospect: <strong className="text-foreground">{leads.sort((a, b) => (b.leadScore || 0) - (a.leadScore || 0))[0]?.fullName || 'N/A'}</strong> with a {leads.sort((a, b) => (b.leadScore || 0) - (a.leadScore || 0))[0]?.leadScore || 0}% score.
+            </>
+          ) : (
+            "Add leads to start generating AI insights and conversion probability scores."
+          )}
         </p>
       </div>
 
@@ -170,16 +180,16 @@ export default function DashboardPage() {
                   <td className="py-3 px-2">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-xs font-semibold text-accent-foreground">
-                        {lead.fullName.split(' ').map(n => n[0]).join('')}
+                        {(lead.fullName || 'U').split(' ').map(n => n[0]).join('')}
                       </div>
                       <div>
-                        <p className="font-medium text-foreground">{lead.fullName}</p>
-                        <p className="text-xs text-muted-foreground">{lead.company}</p>
+                        <p className="font-medium text-foreground">{lead.fullName || 'Unknown'}</p>
+                        <p className="text-xs text-muted-foreground">{lead.company || 'No Company'}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 px-2 font-medium text-foreground">${lead.estimatedValue.toLocaleString()}</td>
-                  <td className="py-3 px-2 text-muted-foreground text-sm">{lead.assignedTo}</td>
+                  <td className="py-3 px-2 font-medium text-foreground">${(lead.estimatedValue || 0).toLocaleString()}</td>
+                  <td className="py-3 px-2 text-muted-foreground text-sm">{typeof lead.assignedTo === 'string' ? lead.assignedTo : (lead.assignedTo as any)?.name || 'Unassigned'}</td>
                   <td className="py-3 px-2">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                       lead.status === 'Converted' ? 'bg-success/10 text-success' :

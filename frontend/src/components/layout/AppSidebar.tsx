@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import {
   LayoutDashboard, Users, Kanban, CheckSquare, Mail,
-  Sparkles, BarChart3, Shield, Settings, Plus, ChevronLeft, ChevronRight, X
+  Sparkles, BarChart3, Shield, Settings, Plus, ChevronLeft, ChevronRight, X, LogOut
 } from 'lucide-react';
 
 const navItems = [
@@ -27,7 +28,14 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <aside className={`
@@ -39,11 +47,11 @@ export default function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProp
       <div className="flex items-center justify-between gap-2 px-4 h-16 border-b border-border shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center shrink-0">
-            <span className="text-primary-foreground font-bold text-sm">A</span>
+            <span className="text-primary-foreground font-bold text-sm">LF</span>
           </div>
           {!collapsed && (
             <div className="overflow-hidden">
-              <h1 className="font-bold text-sm text-foreground leading-tight">Architect CRM</h1>
+              <h1 className="font-bold text-sm text-foreground leading-tight">LeadFlow CRM</h1>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Enterprise Tier</p>
             </div>
           )}
@@ -100,14 +108,21 @@ export default function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProp
         })}
 
         {/* User */}
-        <div className="flex items-center gap-3 px-3 py-3 mt-2 rounded-lg bg-secondary">
-          <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center shrink-0">
-            <span className="text-primary-foreground text-xs font-semibold">AS</span>
+        <div className="flex items-center gap-3 px-3 py-3 mt-2 rounded-lg bg-secondary relative group">
+          <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center shrink-0 shadow-sm border border-primary/20">
+            <span className="text-primary-foreground text-xs font-semibold">{user?.initials || '??'}</span>
           </div>
           {!collapsed && (
-            <div className="overflow-hidden">
-              <p className="text-sm font-medium text-foreground truncate">Alex Sterling</p>
-              <p className="text-[11px] text-muted-foreground truncate">Sales Director</p>
+            <div className="flex-1 min-w-0 pr-6">
+              <p className="text-sm font-semibold text-foreground truncate">{user?.name || 'Guest User'}</p>
+              <p className="text-[11px] text-muted-foreground truncate">{user?.role || 'User'}</p>
+              <button 
+                onClick={handleLogout}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                title="Logout"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
             </div>
           )}
         </div>
@@ -115,7 +130,7 @@ export default function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProp
         {!collapsed && (
           <button className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity mt-2">
             <Plus className="w-4 h-4" />
-            New Record
+            New Lead
           </button>
         )}
 

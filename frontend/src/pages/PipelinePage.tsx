@@ -115,24 +115,29 @@ export default function PipelinePage() {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex flex-wrap gap-1.5">
-                        {lead.tags.map((tag) => (
+                        {lead.tags?.length > 0 ? lead.tags.map((tag) => (
                           <span key={tag} className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${tagColors[tag] || 'bg-secondary text-secondary-foreground'}`}>
                             {tag}
                           </span>
-                        ))}
+                        )) : (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase bg-secondary text-secondary-foreground">Lead</span>
+                        )}
                       </div>
                       <GripVertical className="w-4 h-4 text-muted-foreground/50" />
                     </div>
-                    <h4 className="font-semibold text-foreground text-sm">{lead.company}</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">{lead.fullName} • ${lead.estimatedValue.toLocaleString()}</p>
+                    <h4 className="font-semibold text-foreground text-sm">{lead.company || 'Private Entity'}</h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">{lead.fullName || 'Anonymous'} • ${(lead.estimatedValue || 0).toLocaleString()}</p>
                     <div className="flex items-center justify-between mt-3">
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[10px] font-semibold text-accent-foreground">
-                          {lead.assignedTo.split(' ').map(n => n[0]).join('')}
+                          {(() => {
+                            const name = typeof lead.assignedTo === 'string' ? lead.assignedTo : (lead.assignedTo as any)?.name || 'System';
+                            return name.split(' ').map(n => n[0]).join('');
+                          })()}
                         </div>
-                        <span className="text-xs text-muted-foreground">{lead.createdAt}</span>
+                        <span className="text-xs text-muted-foreground">{new Date(lead.createdAt).toLocaleDateString()}</span>
                       </div>
-                      {lead.leadScore > 70 && (
+                      {(lead.leadScore || 0) > 70 && (
                         <span className="text-xs text-success font-medium">{lead.leadScore}%</span>
                       )}
                     </div>

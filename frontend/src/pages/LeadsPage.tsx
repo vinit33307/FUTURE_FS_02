@@ -34,21 +34,21 @@ export default function LeadsPage() {
   const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
   const statuses = ['All', 'New', 'Contacted', 'Qualified', 'Converted', 'Lost'];
 
-  const filtered = leads
+  const filtered = (leads || [])
     .filter(lead => {
       const matchesStatus = filterStatus === 'All' || lead.status === filterStatus;
-      const matchesSearch = lead.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        lead.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        lead.email.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = (lead.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (lead.company || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (lead.email || '').toLowerCase().includes(searchQuery.toLowerCase());
       return matchesStatus && matchesSearch;
     })
     .sort((a, b) => {
       if (sortBy === 'priority') {
-        const order = { High: 0, Medium: 1, Low: 2 };
-        return order[a.priority] - order[b.priority];
+        const order: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
+        return (order[a.priority] ?? 1) - (order[b.priority] ?? 1);
       }
-      if (sortBy === 'score') return b.leadScore - a.leadScore;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      if (sortBy === 'score') return (b.leadScore || 0) - (a.leadScore || 0);
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
     });
 
   const toggleSelect = (id: string) => {
@@ -65,10 +65,10 @@ export default function LeadsPage() {
   };
 
   const stats = {
-    total: leads.length,
-    converted: leads.filter(l => l.status === 'Converted').length,
-    newToday: leads.filter(l => l.createdAt === new Date().toISOString().split('T')[0]).length,
-    totalValue: leads.reduce((s, l) => s + l.estimatedValue, 0),
+    total: leads?.length || 0,
+    converted: leads?.filter(l => l.status === 'Converted').length || 0,
+    newToday: leads?.filter(l => l.createdAt && new Date(l.createdAt).toDateString() === new Date().toDateString()).length || 0,
+    totalValue: leads?.reduce((s, l) => s + (l.estimatedValue || 0), 0) || 0,
   };
 
   return (
@@ -168,38 +168,38 @@ export default function LeadsPage() {
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center text-xs font-semibold text-accent-foreground">
-                        {lead.fullName.split(' ').map(n => n[0]).join('')}
+                        {(lead.fullName || 'U').split(' ').map(n => n[0]).join('')}
                       </div>
                       <div>
-                        <p className="font-medium text-foreground">{lead.fullName}</p>
-                        <p className="text-xs text-muted-foreground">#{44900 + parseInt(lead.id)}</p>
+                        <p className="font-medium text-foreground">{lead.fullName || 'Unknown'}</p>
+                        <p className="text-xs text-muted-foreground text-ellipsis overflow-hidden max-w-[100px]">ID: {lead.id?.substring(0, 8)}...</p>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-foreground">{lead.company}</td>
+                  <td className="py-3 px-4 text-foreground">{lead.company || 'N/A'}</td>
                   <td className="py-3 px-4">
-                    <p className="text-foreground">{lead.email}</p>
-                    <p className="text-xs text-muted-foreground">{lead.phone}</p>
+                    <p className="text-foreground">{lead.email || 'N/A'}</p>
+                    <p className="text-xs text-muted-foreground">{lead.phone || 'N/A'}</p>
                   </td>
                   <td className="py-3 px-4">
-                    <span className="px-2 py-1 rounded bg-secondary text-xs font-medium text-secondary-foreground">{lead.source}</span>
+                    <span className="px-2 py-1 rounded bg-secondary text-xs font-medium text-secondary-foreground">{lead.source || 'Direct'}</span>
                   </td>
                   <td className="py-3 px-4">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1 ${statusColors[lead.status]}`}>
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1 ${statusColors[lead.status] || 'bg-secondary text-secondary-foreground'}`}>
                       <span className="w-1.5 h-1.5 rounded-full bg-current" />
                       {lead.status}
                     </span>
                   </td>
                   <td className="py-3 px-4">
-                    <span className={`text-xs font-medium ${priorityDisplay[lead.priority].color}`}>
-                      {priorityDisplay[lead.priority].label}
+                    <span className={`text-xs font-medium ${priorityDisplay[lead.priority]?.color || 'text-muted-foreground'}`}>
+                      {priorityDisplay[lead.priority]?.label || 'MEDIUM'}
                     </span>
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-foreground">{lead.leadScore}%</span>
+                      <span className="text-sm font-medium text-foreground">{lead.leadScore || 0}%</span>
                       <div className="w-12 h-1.5 rounded-full bg-secondary overflow-hidden">
-                        <div className="h-full rounded-full bg-primary" style={{ width: `${lead.leadScore}%` }} />
+                        <div className="h-full rounded-full bg-primary" style={{ width: `${lead.leadScore || 0}%` }} />
                       </div>
                     </div>
                   </td>
